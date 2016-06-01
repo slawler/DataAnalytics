@@ -13,21 +13,22 @@ from scipy import interpolate
 
 #------------------------------BEGIN SCRIPT----------------------------------#
 
-tabs = []
+WorkBook     = 'PlaqWHAFIS2008_500yr_wground_vsl.xlsx'
 
-for i in range(1,29):
-    tab = 'P' + str(i)
-    tabs.append(tab)
-
+New_WorkBook = 'PlaqWHAFIS2008_500yr_wground_INTERP_vsl.xlsx'
 
 for i in range(1):  
+    #--Get list of tabs (worksheets)
+    tabs = pd.ExcelFile(WorkBook).sheet_names 
+    
     #--inititate excelwriter
-    writer = pd.ExcelWriter('PlaqWHAFIS2008_500yr_wground_v_Interp_sl.xlsx', engine='xlsxwriter')
+    writer = pd.ExcelWriter(New_WorkBook, engine='xlsxwriter')
     
     #---For each sheet in the workbook
-    for t in tabs:  
+    for t in tabs: 
+        print t
         #---Read in the sheet
-        df = pd.read_excel('PlaqWHAFIS2008_500yr_wground_vsl.xlsx', sheetname = t)
+        df = pd.read_excel(WorkBook)
         
         #---Select 1st set of columns, convert to dataframe, rename (for the merge function)
         df1 = pd.concat([df['Station'], df['Wave Crest']], axis=1, keys=['Station', 'Wave Crest'])
