@@ -11,11 +11,17 @@ import pandas as pd
 import numpy as np
 from scipy import interpolate 
 
+#--------------------------Assign Variables----------------------------------#
+
+WorkBook     = 'WHAFIS_500_for_Seth1.xlsx' #Excel Input Workbook
+
+New_WorkBook = 'WHAFIS_500_INTERPOLATED.xlsx' #Excel Output Workbook
+
+x1, y1  = 'LOCATION' , 'ELEVATION'  #x,y point pair column names, basis of interp
+x2, y2  = 'STATION'  , 'ELEVATION.1'#secondary x,y point pair names, to be interp
+x3 = 'WAVECREST'                    #new column name to replace y2
+
 #------------------------------BEGIN SCRIPT----------------------------------#
-
-WorkBook     = 'PlaqWHAFIS2008_500yr_wground_vsl.xlsx'
-
-New_WorkBook = 'PlaqWHAFIS2008_500yr_wground_INTERP_vsl.xlsx'
 
 for i in range(1):  
     #--Get list of tabs (worksheets)
@@ -26,42 +32,42 @@ for i in range(1):
     
     #---For each sheet in the workbook
     for t in tabs: 
-        print t
+        print 'reading: ', t
+        
         #---Read in the sheet
-        df = pd.read_excel(WorkBook)
+        df = pd.read_excel(WorkBook,skiprows=1, sheetname=t)
         
         #---Select 1st set of columns, convert to dataframe, rename (for the merge function)
-        df1 = pd.concat([df['Station'], df['Wave Crest']], axis=1, keys=['Station', 'Wave Crest'])
-        df1.rename(columns = {'Station':'STATION'}, inplace=True)
+        df1 = pd.concat([df[x1], df[y1]], axis=1, keys=[x1, y1])
+        df1.rename(columns = {x1:x2}, inplace=True)
+        df1.rename(columns = {y1:x3}, inplace=True)
         
         #---Select 2nd set of columns, convert to dataframe, rename (for the merge function)
-        df2 = pd.concat([df['Station.1'], df['Elevation']], axis=1, keys=['Station.1', 'Elevation'])
-        df2.rename(columns = {'Station.1':'STATION'}, inplace=True)
+        df2 = pd.concat([df[x2], df[y2]], axis=1, keys=[x2, y2])
+        df2.rename(columns = {y2:y1}, inplace=True)
         
         #---Stack the index lists, sort, drop duplicates and make a dataframe with the clean index
         idx          = pd.DataFrame()
-        idx          = pd.concat([df['Station'],df['Station.1']])      
-        df_idx       = pd.DataFrame(idx, columns = ['Station.1'])     
-        df_idx_sort  = df_idx.sort(['Station.1']) 
-        
-        idx_df    = df_idx_sort.sort().drop_duplicates()  
-        idx_df.rename(columns = {'Station.1':'STATION'}, inplace=True)
+        idx          = pd.concat([df[x1],df[x2]])      
+        df_idx       = pd.DataFrame(idx, columns = [x2])     
+        df_idx_sort  = df_idx.sort([x2], ascending = True) 
+        idx_df    = df_idx_sort.drop_duplicates().dropna()
         
         #---Merge the 2 dataframes to the new df index
-        df_part1 = idx_df.merge(df1,on="STATION", how = 'left')
-        df_part2 = df_part1.merge(df2,on="STATION", how = 'left')
+        df_part1 = idx_df.merge(df1,on=x2, how = 'left')
+        df_part2 = df_part1.merge(df2,on=x2, how = 'left')
         
         #---Interpolate to a 3rd dataframe, merge with the original and drop redundant column
         df3 = df_part2.interpolate()
-        output = df1.merge(df3,on="STATION", how = 'left')
-        output.drop('Wave Crest_y', axis=1, inplace=True)
+        output = df1.merge(df3,on=x2, how = 'left')
+        output.drop(x3+'_x', axis=1, inplace=True)
         
         #----Rename Columns if needed, and write to a new sheet in the excel file
-        output.rename(columns = {'Wave Crest_x': 'Wave Crest'}, inplace=True)
+        output.rename(columns = {x3+'_y': x3}, inplace=True)
         output.to_excel(writer, sheet_name= t, index = False)
-        print '.................'
+        print output.head()
         print 'writing : ', t
+        print '.................'
         
     #---Save the excel file and end program    
     writer.save()
-
