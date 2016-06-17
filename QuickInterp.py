@@ -5,6 +5,10 @@ Input(s): excel file
 Output(s): excel file
 slawler@dewberry.com
 Created on Tue Apr 19 15:08:33 2016
+
+
+Comments: May need to run --allow a crash-- and look at the output dataframe 
+column names to setup for automated processing: df.head()
 """
 #------------Load Python Modules--------------------#
 import pandas as pd
@@ -13,14 +17,14 @@ from scipy import interpolate
 
 #--------------------------Assign Variables----------------------------------#
 
-WorkBook     = 'WHAFIS_500_for_Seth1.xlsx' #Excel Input Workbook
+WorkBook     = 'Copy of WHAFIS_500_for_Seth.xlsx' #Excel Input Workbook
 
-New_WorkBook = 'WHAFIS_500_INTERPOLATED.xlsx' #Excel Output Workbook
+New_WorkBook = 'Copy of WHAFIS_500_for_Seth_Interp_v2.xlsx' #Excel Output Workbook
 
-x1, y1  = 'LOCATION' , 'ELEVATION'  #x,y point pair column names, basis of interp
-x2, y2  = 'STATION'  , 'ELEVATION.1'#secondary x,y point pair names, to be interp
-x3 = 'WAVECREST'                    #new column name to replace y2
-
+x1, y1  = 'LOCATION', 'ELEVATION'   #x,y point pair column names, basis of interp
+x2, y2  = 'STATION' , 'ELEVATION.1'  #secondary x,y point pair names, to be interp
+y1_new, y2_new  = 'Wave Crest', 'Ground Elevation'       #new column names to replace y1 &y2
+skiprows = 1
 #------------------------------BEGIN SCRIPT----------------------------------#
 
 for i in range(1):  
@@ -35,7 +39,7 @@ for i in range(1):
         print 'reading: ', t
         
         #---Read in the sheet
-        df = pd.read_excel(WorkBook,skiprows=1, sheetname=t)
+        df = pd.read_excel(WorkBook,skiprows=skiprows, sheetname=t)
         
         #---Select 1st set of columns, convert to dataframe, rename (for the merge function)
         df1 = pd.concat([df[x1], df[y1]], axis=1, keys=[x1, y1])
@@ -60,10 +64,11 @@ for i in range(1):
         #---Interpolate to a 3rd dataframe, merge with the original and drop redundant column
         df3 = df_part2.interpolate()
         output = df1.merge(df3,on=x2, how = 'left')
-        output.drop(x3+'_x', axis=1, inplace=True)
+        output.drop(y3+'_x', axis=1, inplace=True)
         
         #----Rename Columns if needed, and write to a new sheet in the excel file
-        output.rename(columns = {x3+'_y': x3}, inplace=True)
+        output.rename(columns = {y3+'_y': y3}, inplace=True)
+        output.rename(columns = {y1: y4}, inplace=True)
         output.to_excel(writer, sheet_name= t, index = False)
         print output.head()
         print 'writing : ', t
@@ -71,3 +76,4 @@ for i in range(1):
         
     #---Save the excel file and end program    
     writer.save()
+            
