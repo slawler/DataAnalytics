@@ -5,8 +5,6 @@ Input(s): excel file
 Output(s): excel file
 slawler@dewberry.com
 Created on Tue Apr 19 15:08:33 2016
-
-
 Comments: May need to run --allow a crash-- and look at the output dataframe 
 column names to setup for automated processing: df.head()
 """
@@ -44,7 +42,7 @@ for i in range(1):
         #---Select 1st set of columns, convert to dataframe, rename (for the merge function)
         df1 = pd.concat([df[x1], df[y1]], axis=1, keys=[x1, y1])
         df1.rename(columns = {x1:x2}, inplace=True)
-        df1.rename(columns = {y1:x3}, inplace=True)
+        df1.rename(columns = {y1:y2}, inplace=True)
         
         #---Select 2nd set of columns, convert to dataframe, rename (for the merge function)
         df2 = pd.concat([df[x2], df[y2]], axis=1, keys=[x2, y2])
@@ -59,16 +57,18 @@ for i in range(1):
         
         #---Merge the 2 dataframes to the new df index
         df_part1 = idx_df.merge(df1,on=x2, how = 'left')
+        df_part1.rename(columns = {y2 : y1_new}, inplace=True)
+        
         df_part2 = df_part1.merge(df2,on=x2, how = 'left')
+        df_part2.rename(columns = {y1: y2_new}, inplace=True)
         
         #---Interpolate to a 3rd dataframe, merge with the original and drop redundant column
-        df3 = df_part2.interpolate()
-        output = df1.merge(df3,on=x2, how = 'left')
-        output.drop(y3+'_x', axis=1, inplace=True)
+        df3 = df_part2.interpolate(method='polynomial', order=1,inplace=False)
+        output = df_idx.merge(df3,on=x2, how = 'left')
         
         #----Rename Columns if needed, and write to a new sheet in the excel file
-        output.rename(columns = {y3+'_y': y3}, inplace=True)
-        output.rename(columns = {y1: y4}, inplace=True)
+
+        
         output.to_excel(writer, sheet_name= t, index = False)
         print output.head()
         print 'writing : ', t
@@ -76,4 +76,3 @@ for i in range(1):
         
     #---Save the excel file and end program    
     writer.save()
-            
