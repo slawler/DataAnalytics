@@ -27,7 +27,7 @@ ws = "ws://192.168.10.102/signalk/v1/stream" #---Websocket Demo Site
 stream = websocket.create_connection(ws)
           
 #--------Open DB to write data-------------#
-db = psycopg2.connect(database="signalk", user="postgres", password="Cambio3dechinga", host="localhost", port="5433")
+db = psycopg2.connect(database="signalk", user="postgres", password="Password", host="localhost", port="5433")
 cur = db.cursor()
 print "Connected to PostgreSQL database instance"
 
