@@ -1,0 +1,17 @@
+team1	team2
+Falcons	Dolphins
+Cowboys	Seahawks
+Patriots	Panthers
+Bills	Redskins
+Steelers	Saints
+Browns	Buccaneers
+Packers	49ers
+Chiefs	Bears
+Eagles	Colts
+Lions	Ravens
+Giants	Jets
+Titans	Raiders
+Rams	Broncos
+Chargers	Vikings
+Cardinals	Texans
+Bengals	Jaguars
