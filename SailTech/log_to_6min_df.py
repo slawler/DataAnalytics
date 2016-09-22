@@ -15,7 +15,7 @@ import matplotlib.cm as cm
 import numpy as np
 #------------------------------BEGIN SCRIPT----------------------------------#
 
-cols= [0,1,2]
+cols= [0,2,3]
 cnames = ['date','data','obs']
 dtypes={'date':'str','data':'str','obs':'float' }
 dtm = ['date']
@@ -24,7 +24,7 @@ def TransformLog(csv):
     df_in = pd.read_csv(csv, sep = '\t', usecols= cols, names=cnames,
                     dtype=dtypes, parse_dates=dtm )
     df = df_in.set_index(['date'])
-    d = df.groupby([pd.TimeGrouper('2min'), 'data']).agg({'obs': np.mean})
+    d = df.groupby([pd.TimeGrouper('6min'), 'data']).agg({'obs': np.mean})
     dn = d.unstack()
     return dn
 
@@ -45,30 +45,39 @@ def rad2deg(vector):
     d_vector[negatives] = d_vector[negatives]*(-1)+180
     return d_vector
 
+def ms2kn(vector):
+    d_vector = vector*1.94684
+    return d_vector
+
 df = TransformLog('log.txt')
 mydata = GetThisBoatData(df)
 
-#Convert Radian Vectors to Degrees
-degdata = [('obs', 'windangleApparent'),
-           ('obs', 'windangleTrueWater')]
 
-tr_wind = [('obs', 'windspeedTrue'),
-           ('obs', 'windangleTrueWater')]
+#tr_wind = [('obs', 'windspeedTrue'),
+#           ('obs', 'windangleTrueWater')]
 
 ap_wind = [('obs', 'windspeedApparent'),
            ('obs', 'windangleApparent')]
 
 perf = [('obs', 'speedOverGround'),
-        ('obs', 'speedThroughWater'),
-        ('obs', 'velocityMadeGood')]
+        ('obs', 'speedThroughWater')]
 
 
+
+degdata = ap_wind
+veldata = perf
+
+#Convert Radian Vectors to Degrees
 for d in degdata:
     df[d] = rad2deg(df[d])
 
+#Convert m/S to Knots
+for d in veldata:
+    df[d] = ms2kn(df[d])
+
 df.plot(x = df.index, y = perf)
 
-ws, wd = df[tr_wind [0]], df[tr_wind[1]]
+ws, wd = df[ap_wind [0]], df[ap_wind[1]]
 ax = WindroseAxes.from_ax()
 ax.bar(wd, ws, normed=True, opening=0.8, edgecolor='white')
 ax.set_legend()
