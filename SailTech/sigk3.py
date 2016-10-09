@@ -55,7 +55,7 @@ while stream.connected == True:
                         dtm = str(datetime.datetime.now())
                         log_entry = '{}\t{}\t{}\n'.format(dtm,dtype,str(value))
                         log.write(log_entry)
-                        print("logging data: " + table)
+                        print("logging data: {}".format(table))
                         
                 else:
                     dtm, value = str(datetime.datetime.now()), data
