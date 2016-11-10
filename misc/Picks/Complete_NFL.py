@@ -13,11 +13,37 @@ from bs4 import BeautifulSoup
 import requests
 import pandas as pd
 import fileinput
+import operator
+import os
+import re
 #------------------------------BEGIN SCRIPT----------------------------------#
-week            = str(1)
-upcoming_games  = "http://www.si.com/nfl/scoreboard?week=1%2C2"
-concluded_games = "http://www.si.com/nfl/scoreboard?week=0%2C4"
-picks           = r"C:\Users\slawler\Desktop\picks.txt"
+lastweek = str(7)
+nextweek = str(10)
+upcoming_games  = "http://www.si.com/nfl/scoreboard?week=1%2C{}".format(nextweek)
+concluded_games = "http://www.si.com/nfl/scoreboard?week=1%2C{}".format(lastweek)
+#picks           = r"C:\Users\slawler\Desktop\picks.txt"
+
+os.chdir(r'C:\Users\slawler\Desktop\NFLPICKS')
+#---Format tables
+wk =lastweek
+df = pd.read_csv(r"week_{}.csv".format(wk))
+df.head()
+emails = df['E-mail:']
+email_list = []
+
+for e in emails:
+    if ".com" in e:
+        email_list.append(e)
+
+for col in df: 
+    if "Game" in col:
+        print(df[col]) 
+        df[col] = df[col].map(lambda x: str(x)[:-8])
+
+df.to_csv("Week{}_EmailTable.csv".format(wk))
+
+print(email_list)
+
 
 #=======================PART 1: Get Upcoming Matchups========================#
 
@@ -27,53 +53,68 @@ teams = ('Eagles', 'Bengals', 'Packers', 'Patriots', 'Falcons', 'Vikings', 'Reds
          'Jets', 'Dolphins', 'Cardinals', 'Titans', 'Giants', 'Colts', 'Jaguars',
          'Saints', 'Chiefs', 'Broncos')
 
-r = requests.get(concluded_games)
+r = requests.get(upcoming_games)
 data = r.text
 soup = BeautifulSoup(data,'lxml')
 tables = soup.find_all("a", class_="unskinned")
 matchups = []
+records = []
 print('\nThis Weeks Match-Ups\n')
 
 # Scrape SI html for Upcoming Match data
 for table in tables:
     try:
         team = table.contents[1].decode_contents()
+        record = table.contents[3].decode_contents()
         if str(team) in teams:
             matchups.append(str(team))
+            records.append(str(record))
+            #print team, record
+            
         else:
             continue
     except:
         continue
-    
-# Write to matchups to file, print to screen     
-with open('Week{0}_Matchups.txt'.format(week),'w') as f:
-    f.write('team1\tteam2\n')    
-    for i, matchup in enumerate(matchups):
-        if i == 2:
-            game = i/2+1
-            print game, matchups[i], matchups[i+1]
-            f.write(matchups[i]+'\t'+ matchups[i+1]+'\n')
-        elif i%2 == 0:
-            game =i/2+1
-            print game, matchups[i], matchups[i+1]
-            f.write(matchups[i] +'\t'+ matchups[i+1] +'\n')
+
+#----With no ties
+'''    
+for i, matchup in enumerate(matchups):
+    if i == 2:
+        game = i/2+1
+        print(game)
+        print(matchups[i], records[i])
+        print(matchups[i+1], records[i+1])
+        print('\n')
+        
+    elif i%2 == 0:
+        game =i/2+1
+        print(game)
+        print(matchups[i], records[i])
+        print(matchups[i+1], records[i+1])
+        print('\n')
+
+'''
+#----With ties
+regex = '<!--\n-->'  
+  
+for i, matchup in enumerate(matchups):
+    if i == 2:
+        game = i/2+1
+        print(game)
+        rec1,rec2 = records[i],records[i+1]
+        print(matchups[i], re.sub(regex,'-',rec1))
+        print(matchups[i+1], re.sub(regex,'-',rec2))
+        print('\n')
+        
+    elif i%2 == 0:
+        game =i/2+1
+        print(game)
+        rec1,rec2 = records[i],records[i+1]
+        print(matchups[i], re.sub(regex,'-',rec1))
+        print(matchups[i+1], re.sub(regex,'-',rec2))
+        print('\n')
 
 
-# Creat javascript doc for weeks games
-df = pd.read_csv('Week{0}_Matchups.txt'.format(week),sep='\t')
-f = fileinput.input('jsquiz.js')
-i=1
-with open('jsquiz{0}.js'.format(week),'w') as fout:
-    for line in f:
-        if "team1" in line and "team2" in line:
-            t1,t2 = df.team1.iloc[i-1],df.team2.iloc[i-1]
-            newline= line.replace("team1",t1).replace("team2",t2)
-            print i, newline
-            i+=1
-            fout.write(newline)
-        else:
-            fout.write(line)
-       
 #===============PART 2: Concluded Games--Get This Weeks Results==============#
 
 r = requests.get(concluded_games)
@@ -122,28 +163,34 @@ def GetWinner(table):
     else:
         winner = 'TIE'
 
-    print(team1.ljust(10), score1, team2.ljust(10), score2)
+    print(team1.ljust(10), str(score1) + '\t', team2.ljust(10), str(score2), "\tGame {0} Winner:".format(str(i+1)), winner)
     return winner
 
 
 for i, table in enumerate(tables):
     winner = GetWinner(table)
-    print("\t\t\t\tGame {0} Winner:".format(str(i+1)), winner,'\n')
     winners.append(winner)
 
+
+
 #===================PART 3: Check Individual Results & Tally Score===========#
-'''
-df = pd.read_csv(picks, sep = '\t')
 
-score_tally = {}
+df = pd.read_csv("Week{}_EmailTable.csv".format(wk), sep = ',')
+df = df.drop_duplicates(subset = 'Name:')
 
-for picker in df:
-    print(picker)
-    score_tally[picker] = 0
-    for pick in df[picker]:
-        if pick in winners:
-            score_tally[picker] +=1
-   
-for picker in sorted(score_tally, key=score_tally.get, reverse=True):
-  print picker, score_tally[picker]
-''' 
+
+df_player = df.set_index('Name:').T
+
+df_results = df_player.isin(winners).astype(int)
+
+weekly_totals = {}
+
+for col in df_results:
+    weekly_totals[col]= df_results[col].sum()
+
+
+final = sorted(weekly_totals.items(), key=operator.itemgetter(1),reverse=True)    
+
+
+for f in final: print(f)
+    
