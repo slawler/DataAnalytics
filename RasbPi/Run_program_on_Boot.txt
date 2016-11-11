@@ -1,0 +1,36 @@
+
+Files needed to call a python file on booting RaspPi:
+
+File 1. boot instructions:     rc.local (must be in /etc dir)
+File 2. executable:            CallPy.sh 
+File 3. python script:         DoStuff.py
+
+
+Sample Files with Directory and contents 
+
+#----------/etc/rc.local
+
+#!/bin/sh
+/home/pi/Documents/CallPy.sh &
+exit 0			 
+
+
+
+
+
+#----------/home/pi/Documents/CallPy.sh
+
+#! /bin/sh
+python /home/pi/Documents/DoStuff.py
+
+
+
+
+
+#----------/home/pi/Documents/DoStuff.sh
+
+from datetime import datetime
+now = datetime.now()
+with open('/home/pi/Documents/Test.log','w') as f:
+    f.write('Test Successful at {}'.format(str(now)))
+
