@@ -1,0 +1,3 @@
+# Execute job from ssh without terminating upon exit
+
+nohup script.py & 
