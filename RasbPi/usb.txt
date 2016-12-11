@@ -1,0 +1,2 @@
+sudo fdisk -l #list devices
+sudo mount /dev/sda1 /mnt/usbdrive #e.g.
