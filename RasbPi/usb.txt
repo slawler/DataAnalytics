@@ -1,2 +1,3 @@
 sudo fdisk -l #list devices
 sudo mount /dev/sda1 /mnt/usbdrive #e.g.
+sudo umount /dev/sda1 /mnt/usbdrive #e.g.
