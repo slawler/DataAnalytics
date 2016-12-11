@@ -17,16 +17,16 @@ import operator
 import os
 import re
 #------------------------------BEGIN SCRIPT----------------------------------#
-lastweek = str(7)
-nextweek = str(10)
+lastweek = str(12)
+nextweek = str(13)
 upcoming_games  = "http://www.si.com/nfl/scoreboard?week=1%2C{}".format(nextweek)
 concluded_games = "http://www.si.com/nfl/scoreboard?week=1%2C{}".format(lastweek)
 #picks           = r"C:\Users\slawler\Desktop\picks.txt"
 
-os.chdir(r'C:\Users\slawler\Desktop\NFLPICKS')
+os.chdir(r'C:\Users\sml\Desktop\NFLPICKS')
 #---Format tables
 wk =lastweek
-df = pd.read_csv(r"week_{}.csv".format(wk))
+df = pd.read_csv(r"Week_{}.csv".format(wk))
 df.head()
 emails = df['E-mail:']
 email_list = []
@@ -38,7 +38,8 @@ for e in emails:
 for col in df: 
     if "Game" in col:
         print(df[col]) 
-        df[col] = df[col].map(lambda x: str(x)[:-8])
+        #df[col] = df[col].map(lambda x: str(x)[:-8])
+        df[col] = df[col].map(lambda x: x.split('(')[0].replace(' ',''))
 
 df.to_csv("Week{}_EmailTable.csv".format(wk))
 
